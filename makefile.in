@@ -97,6 +97,8 @@ binutils.tar.gz               :
 binutils                      : | binutils.tar.gz
 	if test ! -d binutils; then mkdir binutils; fi
 	tar xfv binutils.tar.gz --strip-components=1 -C binutils
+	patch -d binutils -p 1 < "$(srcdir)/config/bfd/z64_reloc.diff"
+	patch -d binutils/gas -p 1 < "$(srcdir)/config/gas/gas-vr4300.diff"
 	patch -d binutils/ld -p 1 < "$(srcdir)/config/ld/ld.diff"
 	cp "$(srcdir)/config/ld/emulparams/"* binutils/ld/emulparams
 	cp "$(srcdir)/config/ld/emultempl/"* binutils/ld/emultempl
@@ -105,6 +107,8 @@ binutils                      : | binutils.tar.gz
 binutils-nospc                :
 	if test ! -d binutils; then mkdir binutils; fi
 	$(WGET) - "$(BINUTILS_URL)" | tar xzv --strip-components=1 -C binutils
+	patch -d binutils -p 1 < "$(srcdir)/config/bfd/z64_reloc.diff"
+	patch -d binutils/gas -p 1 < "$(srcdir)/config/gas/gas-vr4300.diff"
 	patch -d binutils/ld -p 1 < "$(srcdir)/config/ld/ld.diff"
 	cp "$(srcdir)/config/ld/emulparams/"* binutils/ld/emulparams
 	cp "$(srcdir)/config/ld/emultempl/"* binutils/ld/emultempl
@@ -142,6 +146,7 @@ gcc                           : | gcc.tar.gz
 	if [ x"$(GCC_IN_TREE_DEPS)" = x"yes" ]; then \
 		cd gcc && ./contrib/download_prerequisites; \
 	fi
+	patch -d gcc -p 1 < "$(srcdir)/config/gcc/gcc-vr4300.diff"
 	cp "$(srcdir)/config/gcc/mips/"* gcc/gcc/config/mips
 	cat "$(srcdir)/config/gcc/config.gcc.ultra" >> gcc/gcc/config.gcc
 gcc-nospc                     :
