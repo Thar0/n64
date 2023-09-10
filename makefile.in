@@ -16,7 +16,7 @@ BINUTILS_VERSION              = @BINUTILS_VERSION@
 GCC_VERSION                   = @GCC_VERSION@
 NEWLIB_VERSION                = @NEWLIB_VERSION@
 GDB_VERSION                   = @GDB_VERSION@
-BINUTILS_URL                  = https://ftp.gnu.org/gnu/binutils/$(BINUTILS_VERSION).tar.gz
+BINUTILS_URL                  = https://github.com/Thar0/binutils-rsp/archive/refs/heads/rsp.tar.gz
 GCC_URL                       = https://ftp.gnu.org/gnu/gcc/$(GCC_VERSION)/$(GCC_VERSION).tar.gz
 NEWLIB_URL                    = https://sourceware.org/pub/newlib/$(NEWLIB_VERSION).tar.gz
 GDB_URL                       = https://ftp.gnu.org/gnu/gdb/$(GDB_VERSION).tar.gz
@@ -31,7 +31,7 @@ CXXFLAGS_FOR_TARGET           = @CXXFLAGS_FOR_TARGET@
 INSTALL                       = @INSTALL@
 MKDIR_P                       = @MKDIR_P@
 LN_S                          = @LN_S@
-WGET                          = @WGET@
+WGET                          = wget -O
 
 .PHONY                        : all install install-full install-full-nospc clean distclean quickclean
 .PHONY                        : all-progs $(ALLPROGS) install-progs $(INSTALLPROGS) install-strip-progs $(INSTALLSTRIPPROGS) clean-progs $(CLEANPROGS) distclean-progs $(DISTCLEANPROGS)
