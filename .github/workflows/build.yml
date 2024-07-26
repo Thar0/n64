@@ -1,0 +1,106 @@
+name: Build
+
+on: [push, pull_request]
+
+env:
+  PREFIX: /opt/n64-ultra-rsp
+  GCC_VER: gcc-14.1.0
+  NEWLIB_VER: newlib-4.4.0.20231231
+  GDB_VER: gdb-14.1
+
+jobs:
+  build:
+    runs-on: ${{ matrix.TARGET.OS }}
+    strategy:
+      fail-fast: false
+      matrix:
+        TARGET:
+          - {
+              OS: 'ubuntu-20.04',
+              ARCHIVE_NAME: 'n64-toolchain-linux.tar.gz'
+            }
+
+    name: Building n64 toolchain for ${{ matrix.TARGET.OS }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies (Ubuntu)
+        shell: bash
+        if: matrix.TARGET.OS == 'ubuntu-20.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential pkg-config zlib1g-dev libexpat1-dev python3-dev make gcc g++ gcc-multilib libgmp-dev libmpfr-dev bison file gperf autoconf wget tar diffutils texinfo
+
+      - name: Configure
+        shell: bash
+        run: | # TODO ideally we'd pass --enable-static-executables to configure, but gdb with python support chokes on this as it doesn't pass -lz -lexpat when checking for a usable python (since pythonX.Y-config doesn't list them)
+          mkdir -p n64-build
+          cd n64-build
+          ../configure --prefix=${PREFIX} \
+              --with-configure-gcc='--disable-libcc1 --includedir='\''${PREFIX}/include/mips64-ultra-elf'\'' --datadir='\''${PREFIX}/share/mips64-ultra-elf'\' \
+              --with-configure-gdb='--includedir='\''${PREFIX}/include/mips64-ultra-elf'\'' --datadir='\''${PREFIX}/share/mips64-ultra-elf'\' \
+              GCC_VERSION=$GCC_VER NEWLIB_VERSION=$NEWLIB_VER GDB_VERSION=$GDB_VER
+          cd ..
+
+      - name: Build Binutils
+        shell: bash
+        run: |
+          make -C n64-build install-binutils
+
+      - name: Build GCC
+        shell: bash
+        run: |
+          make -C n64-build install-gcc
+
+      - name: Build Newlib
+        shell: bash
+        run: |
+          make -C n64-build install-gcc
+
+      - name: Build GDB
+        shell: bash
+        run: | # TODO gdb doesn't build due to -fpermissive problems
+          make -C n64-build install-gdb
+
+      - name: Build Other
+        shell: bash
+        run: |
+          make -C n64-build install-sys
+          make -C n64-build install-compat-exec
+
+      - name: Test
+        shell: bash
+        run: |
+          ${PREFIX}/bin/mips64-ultra-elf-gcc -v
+          ${PREFIX}/bin/mips64-ultra-elf-ld -v
+          ${PREFIX}/bin/mips64-ultra-elf-as --version
+          ${PREFIX}/bin/mips64-ultra-elf-gdb --config
+
+      - name: Remove unneeded
+        shell: bash
+        run: |
+          rm -rf ${PREFIX}/share/info
+          rm -rf ${PREFIX}/share/man/man7
+
+      - name: Strip executables
+        shell: bash
+        run: |
+          find ${PREFIX} -type f -not -path "${PREFIX}/lib/gcc/mips64-ultra-elf/**" -not -path "${PREFIX}/mips64-ultra-elf/lib/**" -not -path "${PREFIX}/mips64-ultra-elf/n64-sysroot/**" | xargs strip || true
+
+      - name: Create release archive
+        shell: bash
+        run: |
+          tar -czf ${{ matrix.TARGET.ARCHIVE_NAME }} ${PREFIX}
+
+      - name: Upload archive
+        uses: actions/upload-artifact@v3
+        with:
+          name: n64-toolchain-${{ matrix.TARGET.OS }}
+          path: |
+            ${{ matrix.TARGET.ARCHIVE_NAME }}
+
+      - name: Publish release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: ${{ matrix.TARGET.ARCHIVE_NAME }}
