@@ -255,10 +255,14 @@ gdb-nospc                     :
 	$(WGET) - "$(GDB_URL)" | tar xzv --strip-components=1 -C gdb
 build-gdb/config.status       : | gdb
 	if test ! -d build-gdb; then mkdir build-gdb; fi
+	# The additional target "mips64-ultra-linux-elf" forces gdb to include the "GNU/Linux" osabi,
+	# some servers and frontends behave better under this osabi than the "None" osabi.
 	cd build-gdb && ../gdb/configure \
 		--prefix="$(prefix)" \
 		--target=$(target) \
 		--with-sysroot="$(sysroot)" \
+		--enable-targets=mips64-ultra-linux-elf \
+		--with-python=/usr/bin/python3 \
 		--disable-nls \
 		LDFLAGS="$(LDFLAGS)" \
 		CFLAGS_FOR_TARGET="$(CFLAGS_FOR_TARGET)" \
