@@ -101,6 +101,14 @@ index 521e08c3c93..5bc51eddbc7 100644
  	}
  
        /* Record the relocated start and end address of the dynamic linker
+@@ -3464,6 +3464,7 @@ const struct target_so_ops svr4_so_ops =
+   svr4_clear_solib,
+   svr4_solib_create_inferior_hook,
+   svr4_current_sos,
++  solib_parse_event,
+   open_symbol_file_object,
+   svr4_in_dynsym_resolve_code,
+   solib_bfd_open,
 diff --git a/gdb/solib-target.c b/gdb/solib-target.c
 index ca9478f2ec3..0affac01aa3 100644
 --- a/gdb/solib-target.c
